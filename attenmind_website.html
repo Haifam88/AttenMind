@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AttenMind — AI Student Engagement Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple-900: #1a0a3c;
+    --purple-800: #2d1160;
+    --purple-700: #3d1a80;
+    --purple-600: #5b2da6;
+    --purple-500: #7c3fcc;
+    --purple-400: #9d60e0;
+    --purple-300: #c09af0;
+    --purple-200: #dcc5f7;
+    --purple-100: #f0e5fc;
+    --purple-50: #f8f2fe;
+    --blue-600: #0ea5e9;
+    --blue-500: #38bdf8;
+    --blue-400: #7dd3fc;
+    --blue-300: #bae6fd;
+    --blue-100: #e0f2fe;
+    --white: #ffffff;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-400: #94a3b8;
+    --gray-600: #475569;
+    --gray-800: #1e293b;
+    --focused: #0ea5e9;
+    --moderate: #a855f7;
+    --distracted: #f43f5e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: #f8f5ff;
+    color: var(--gray-800);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--purple-100);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem; height: 64px;
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px; text-decoration: none;
+  }
+  .nav-logo-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple-600), var(--blue-500));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-icon svg { width: 18px; height: 18px; fill: white; }
+  .nav-logo span {
+    font-size: 18px; font-weight: 700; color: var(--purple-800);
+    letter-spacing: -0.02em;
+  }
+
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    text-decoration: none; font-size: 14px; font-weight: 500;
+    color: var(--gray-600); padding: 6px 14px; border-radius: 8px;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--purple-700); background: var(--purple-50);
+  }
+
+  .nav-badge {
+    background: linear-gradient(135deg, var(--purple-600), var(--blue-500));
+    color: white; font-size: 12px; font-weight: 600;
+    padding: 6px 16px; border-radius: 20px; letter-spacing: 0.01em;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; padding-top: 64px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ── HOME ── */
+  .hero {
+    min-height: calc(100vh - 64px);
+    background: linear-gradient(160deg, var(--purple-900) 0%, var(--purple-800) 40%, #0c1a4a 75%, #06213f 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 4rem 2rem; position: relative; overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(124,63,204,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 30%, rgba(14,165,233,0.2) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0; opacity: 0.06;
+    background-image: linear-gradient(rgba(192,154,240,1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(192,154,240,1) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .hero-content { position: relative; text-align: center; max-width: 760px; }
+
+  .hero-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--blue-300); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 100px; margin-bottom: 1.8rem;
+  }
+  .hero-chip-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue-500); animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 800;
+    line-height: 1.0; letter-spacing: -0.03em; color: white;
+    margin-bottom: 1rem;
+  }
+  .hero h1 span {
+    background: linear-gradient(120deg, var(--purple-300) 0%, var(--blue-400) 60%, #a5f3fc 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.15rem; color: rgba(255,255,255,0.6); line-height: 1.65;
+    max-width: 520px; margin: 0 auto 2.5rem;
+  }
+
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple-600), var(--blue-500));
+    color: white; font-size: 15px; font-weight: 600;
+    padding: 13px 28px; border-radius: 12px; border: none; cursor: pointer;
+    transition: all 0.25s; font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,63,204,0.5); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08); color: white;
+    font-size: 15px; font-weight: 500;
+    padding: 13px 28px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
+    transition: all 0.25s; font-family: 'Outfit', sans-serif;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+
+  /* stats bar */
+  .stats-bar {
+    position: relative; display: flex; gap: 0;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; overflow: hidden; margin-top: 4rem; width: 100%; max-width: 580px;
+  }
+  .stat-item { flex: 1; padding: 1.25rem; text-align: center; }
+  .stat-item + .stat-item { border-left: 1px solid rgba(255,255,255,0.08); }
+  .stat-val { font-size: 2rem; font-weight: 700; color: white; letter-spacing: -0.03em; }
+  .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  /* features */
+  .section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--purple-600); margin-bottom: 0.6rem;
+  }
+  .section h2 {
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 700;
+    color: var(--purple-900); letter-spacing: -0.02em; margin-bottom: 0.8rem;
+  }
+  .section-sub { font-size: 1.05rem; color: var(--gray-600); max-width: 480px; line-height: 1.6; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 3rem; }
+
+  .feature-card {
+    background: white; border: 1px solid var(--purple-100);
+    border-radius: 16px; padding: 1.75rem 1.5rem;
+    transition: all 0.25s; cursor: default;
+  }
+  .feature-card:hover {
+    border-color: var(--purple-300); transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(91,45,166,0.1);
+  }
+
+  .feature-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem; font-size: 22px;
+  }
+  .feature-icon.purple { background: var(--purple-100); }
+  .feature-icon.blue { background: var(--blue-100); }
+
+  .feature-card h3 { font-size: 15px; font-weight: 600; color: var(--purple-900); margin-bottom: 0.4rem; }
+  .feature-card p { font-size: 13.5px; color: var(--gray-600); line-height: 1.55; }
+
+  /* how it works */
+  .how-section {
+    background: linear-gradient(135deg, var(--purple-900), #0c1a4a);
+    padding: 5rem 2rem;
+  }
+  .how-inner { max-width: 1000px; margin: 0 auto; }
+  .how-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 3rem; background: rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; }
+  .how-step { background: rgba(255,255,255,0.03); padding: 2rem 1.5rem; text-align: center; }
+  .step-num { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--purple-600), var(--blue-500)); color: white; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .how-step h3 { font-size: 14px; font-weight: 600; color: white; margin-bottom: 0.5rem; }
+  .how-step p { font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+  /* team */
+  .team-section { padding: 5rem 2rem; background: white; }
+  .team-inner { max-width: 1000px; margin: 0 auto; }
+  .team-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-top: 3rem; }
+
+  .team-card {
+    background: var(--purple-50); border: 1px solid var(--purple-100);
+    border-radius: 14px; padding: 1.5rem 1rem; text-align: center;
+    transition: all 0.25s;
+  }
+  .team-card:hover { border-color: var(--purple-300); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(91,45,166,0.1); }
+
+  .team-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple-600), var(--blue-500));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: white; margin: 0 auto 0.8rem;
+    letter-spacing: -0.02em;
+  }
+  .team-card h4 { font-size: 13px; font-weight: 600; color: var(--purple-900); margin-bottom: 0.2rem; }
+  .team-card span { font-size: 11.5px; color: var(--gray-400); }
+
+  .supervisor-card {
+    background: linear-gradient(135deg, var(--purple-800), #0c1a4a);
+    border: 1px solid var(--purple-600); border-radius: 16px;
+    padding: 2rem 1.5rem; text-align: center; margin-bottom: 2rem;
+    grid-column: 1 / -1;
+  }
+  .supervisor-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-500), var(--purple-400));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; color: white; margin: 0 auto 1rem;
+  }
+  .supervisor-card h4 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 0.3rem; }
+  .supervisor-card .role { font-size: 13px; color: var(--blue-300); margin-bottom: 0.3rem; }
+  .supervisor-card .affil { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  /* ── CAMERA PAGE ── */
+  .camera-page { background: #0d0820; min-height: 100vh; padding: 2rem; }
+  .camera-header { text-align: center; padding: 2rem 0 3rem; }
+  .camera-header h1 { font-size: 2rem; font-weight: 700; color: white; margin-bottom: 0.4rem; }
+  .camera-header p { color: rgba(255,255,255,0.5); font-size: 14px; }
+
+  .camera-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+
+  .camera-feed {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; overflow: hidden; position: relative;
+    aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;
+  }
+
+  .camera-offline {
+    display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    color: rgba(255,255,255,0.3); text-align: center;
+  }
+  .cam-icon { font-size: 56px; opacity: 0.4; }
+  .camera-offline p { font-size: 15px; }
+  .camera-offline small { font-size: 12px; opacity: 0.6; }
+
+  .camera-canvas { width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 20px; }
+
+  .camera-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 60%, rgba(13,8,32,0.8) 100%);
+  }
+
+  .camera-status-bar {
+    position: absolute; bottom: 1rem; left: 1rem; right: 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border: 1px solid rgba(239,68,68,0.5); border-radius: 100px;
+    padding: 4px 12px; font-size: 12px; font-weight: 600; color: #fca5a5;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .live-badge.on { opacity: 1; }
+  .live-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; animation: pulse 1s infinite; }
+
+  .fps-badge {
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+    padding: 4px 12px; font-size: 12px; color: rgba(255,255,255,0.5);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--purple-400), var(--blue-400), transparent);
+    opacity: 0;
+    animation: scan 3s linear infinite;
+  }
+  @keyframes scan {
+    0% { top: 0; opacity: 0; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .scanning .scan-line { opacity: 1; }
+  .scanning .scan-line { animation-play-state: running; }
+
+  /* sidebar */
+  .camera-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+  .sidebar-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 1.25rem;
+  }
+  .sidebar-card-title {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); margin-bottom: 1rem;
+  }
+
+  .score-display { text-align: center; }
+  .score-ring {
+    width: 110px; height: 110px; margin: 0 auto 0.75rem;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .score-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring-val { font-size: 2rem; font-weight: 800; color: white; z-index: 1; letter-spacing: -0.03em; }
+  .score-ring-val small { font-size: 0.5em; color: rgba(255,255,255,0.4); }
+
+  .status-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+  }
+  .status-tag.focused { background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.4); color: var(--blue-400); }
+  .status-tag.moderate { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple-300); }
+  .status-tag.distracted { background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.4); color: #fda4af; }
+
+  .metrics-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .metric-mini {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px; padding: 0.75rem 0.5rem; text-align: center;
+  }
+  .metric-mini-val { font-size: 11px; font-weight: 700; color: white; margin-bottom: 2px; }
+  .metric-mini-lbl { font-size: 9.5px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric-mini-val.good { color: var(--blue-400); }
+  .metric-mini-val.warn { color: #c084fc; }
+  .metric-mini-val.bad { color: #fda4af; }
+
+  .control-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ctrl-btn {
+    padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; font-family: 'Outfit', sans-serif; transition: all 0.2s;
+  }
+  .ctrl-btn.start { background: linear-gradient(135deg, var(--purple-600), var(--blue-500)); color: white; }
+  .ctrl-btn.start:hover { opacity: 0.9; transform: translateY(-1px); }
+  .ctrl-btn.stop { background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #fda4af; }
+  .ctrl-btn.stop:hover { background: rgba(244,63,94,0.25); }
+  .ctrl-btn.save { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); grid-column: 1 / -1; }
+  .ctrl-btn.save:hover { background: rgba(255,255,255,0.1); }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* session log */
+  .log-list { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
+  .log-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.03);
+    font-size: 11.5px;
+  }
+  .log-time { color: rgba(255,255,255,0.3); font-family: 'DM Mono', monospace; min-width: 44px; }
+  .log-msg { color: rgba(255,255,255,0.65); flex: 1; }
+  .log-score { font-weight: 700; font-family: 'DM Mono', monospace; }
+
+  /* ── RESULTS PAGE ── */
+  .results-page { background: var(--gray-50); min-height: 100vh; padding: 2.5rem 2rem; }
+  .results-inner { max-width: 1100px; margin: 0 auto; }
+  .results-header { margin-bottom: 2.5rem; }
+  .results-header h1 { font-size: 1.8rem; font-weight: 700; color: var(--purple-900); margin-bottom: 0.3rem; }
+  .results-header p { color: var(--gray-600); font-size: 14px; }
+
+  .results-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .summary-card {
+    background: white; border: 1px solid var(--purple-100); border-radius: 14px; padding: 1.25rem;
+  }
+  .summary-label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .summary-value { font-size: 2rem; font-weight: 700; color: var(--purple-800); letter-spacing: -0.03em; }
+  .summary-value.focused { color: var(--blue-600); }
+  .summary-value.distracted { color: #e11d48; }
+  .summary-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  .chart-area {
+    background: white; border: 1px solid var(--purple-100); border-radius: 16px; padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .chart-title { font-size: 14px; font-weight: 600; color: var(--purple-900); margin-bottom: 1.25rem; }
+
+  .chart-bars { display: flex; gap: 8px; align-items: flex-end; height: 180px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-bar {
+    width: 100%; border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--purple-400), var(--purple-600));
+    transition: height 0.4s ease; cursor: pointer;
+  }
+  .chart-bar:hover { filter: brightness(1.15); }
+  .chart-bar.blue { background: linear-gradient(180deg, var(--blue-400), var(--blue-600)); }
+  .chart-bar.green { background: linear-gradient(180deg, #4ade80, #16a34a); }
+  .chart-bar.amber { background: linear-gradient(180deg, #fbbf24, #d97706); }
+  .chart-bar.red { background: linear-gradient(180deg, #fb7185, #e11d48); }
+  .chart-x-lbl { font-size: 10px; color: var(--gray-400); text-align: center; white-space: nowrap; }
+
+  .students-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .student-result-card {
+    background: white; border: 1px solid var(--purple-100); border-radius: 14px; padding: 1.25rem;
+    display: flex; gap: 1rem; align-items: center;
+  }
+  .student-score-ring { flex-shrink: 0; }
+  .student-info h4 { font-size: 14px; font-weight: 600; color: var(--purple-900); margin-bottom: 4px; }
+  .student-metrics { display: flex; gap: 6px; flex-wrap: wrap; }
+  .micro-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 500;
+  }
+  .micro-badge.good { background: var(--blue-100); color: #0369a1; }
+  .micro-badge.bad { background: #ffe4e6; color: #be123c; }
+  .micro-badge.warn { background: var(--purple-100); color: var(--purple-700); }
+
+  /* ── ARCHIVE PAGE ── */
+  .archive-page { background: var(--gray-50); min-height: 100vh; padding: 2.5rem 2rem; }
+  .archive-inner { max-width: 1100px; margin: 0 auto; }
+  .archive-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+  .archive-header h1 { font-size: 1.8rem; font-weight: 700; color: var(--purple-900); }
+
+  .filter-row { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--purple-200); background: white; color: var(--gray-600);
+    cursor: pointer; transition: all 0.2s; font-family: 'Outfit', sans-serif;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--purple-600); color: white; border-color: var(--purple-600); }
+
+  .archive-table { background: white; border: 1px solid var(--purple-100); border-radius: 16px; overflow: hidden; }
+  .table-head { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 100px; padding: 0.75rem 1.25rem; background: var(--purple-50); border-bottom: 1px solid var(--purple-100); }
+  .table-head span { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.06em; }
+  .table-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 100px; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--purple-50); align-items: center; transition: background 0.15s; }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--purple-50); }
+  .table-row span { font-size: 13.5px; color: var(--gray-800); }
+  .table-row .date { color: var(--gray-400); font-size: 13px; }
+  .table-row .score-pill {
+    font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 100px;
+  }
+  .score-pill.high { background: rgba(14,165,233,0.12); color: #0369a1; }
+  .score-pill.mid { background: rgba(168,85,247,0.12); color: var(--purple-700); }
+  .score-pill.low { background: rgba(244,63,94,0.12); color: #be123c; }
+
+  .view-btn {
+    font-size: 12px; padding: 5px 12px; border-radius: 7px;
+    background: var(--purple-50); border: 1px solid var(--purple-200);
+    color: var(--purple-700); cursor: pointer; font-family: 'Outfit', sans-serif;
+    font-weight: 500; transition: all 0.2s;
+  }
+  .view-btn:hover { background: var(--purple-600); color: white; border-color: var(--purple-600); }
+
+  /* ── ABOUT PAGE ── */
+  .about-page { background: white; min-height: 100vh; }
+  .about-hero {
+    background: linear-gradient(135deg, var(--purple-900), #0c1a4a);
+    padding: 5rem 2rem; text-align: center;
+  }
+  .about-hero h1 { font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: 0.8rem; letter-spacing: -0.02em; }
+  .about-hero p { font-size: 1.05rem; color: rgba(255,255,255,0.6); max-width: 540px; margin: 0 auto; line-height: 1.6; }
+
+  .about-content { max-width: 900px; margin: 0 auto; padding: 4rem 2rem; }
+  .about-section { margin-bottom: 3.5rem; }
+  .about-section h2 { font-size: 1.3rem; font-weight: 700; color: var(--purple-900); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--purple-100); }
+  .about-section p { font-size: 14.5px; color: var(--gray-600); line-height: 1.7; margin-bottom: 0.8rem; }
+  .tech-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+  .tech-tag {
+    padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 500;
+    background: var(--purple-50); border: 1px solid var(--purple-200); color: var(--purple-700);
+  }
+  .tech-tag.blue { background: var(--blue-100); border-color: var(--blue-300); color: #0369a1; }
+
+  .model-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+  .model-card {
+    background: var(--purple-50); border: 1px solid var(--purple-100); border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .model-card h4 { font-size: 13px; font-weight: 700; color: var(--purple-800); margin-bottom: 0.4rem; }
+  .model-card p { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+  .model-badge { display: inline-block; font-size: 10px; font-weight: 600; background: linear-gradient(135deg, var(--purple-600), var(--blue-500)); color: white; padding: 2px 8px; border-radius: 100px; margin-bottom: 0.5rem; }
+
+  /* score formula */
+  .formula-box {
+    background: var(--gray-800); border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.6;
+  }
+  .formula-box .c-purple { color: var(--purple-300); }
+  .formula-box .c-blue { color: var(--blue-400); }
+  .formula-box .c-green { color: #86efac; }
+
+  /* FOOTER */
+  footer {
+    background: var(--purple-900); color: rgba(255,255,255,0.5);
+    text-align: center; padding: 2rem; font-size: 13px;
+  }
+  footer strong { color: white; }
+
+  /* ── IMAGE UPLOAD ── */
+  .upload-panel {
+    margin-top: 1rem;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; overflow: hidden;
+  }
+  .upload-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.9rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer; user-select: none;
+  }
+  .upload-panel-header h3 {
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.75);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .upload-panel-header .chevron {
+    font-size: 12px; color: rgba(255,255,255,0.3); transition: transform 0.25s;
+  }
+  .upload-panel-header.open .chevron { transform: rotate(180deg); }
+  .upload-panel-body { padding: 1.25rem; display: none; }
+  .upload-panel-body.open { display: block; }
+
+  .drop-zone {
+    border: 1.5px dashed rgba(124,63,204,0.45); border-radius: 14px;
+    padding: 2rem 1rem; text-align: center; cursor: pointer;
+    transition: all 0.2s; position: relative; background: rgba(124,63,204,0.04);
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--purple-400); background: rgba(124,63,204,0.1);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-zone-icon { font-size: 32px; margin-bottom: 0.5rem; }
+  .drop-zone p { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 3px; }
+  .drop-zone small { font-size: 11px; color: rgba(255,255,255,0.25); }
+
+  .upload-preview {
+    display: none; margin-top: 1rem; border-radius: 12px; overflow: hidden;
+    position: relative; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .upload-preview img { width: 100%; display: block; max-height: 280px; object-fit: cover; }
+  .upload-preview-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(13,8,32,0.85) 100%);
+    display: flex; align-items: flex-end; padding: 1rem;
+  }
+  .upload-preview-info { flex: 1; }
+  .upload-preview-info span { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  .upload-analyze-btn {
+    width: 100%; margin-top: 0.9rem;
+    padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    background: linear-gradient(135deg, var(--purple-600), var(--blue-500));
+    color: white; border: none; cursor: pointer; font-family: 'Outfit', sans-serif;
+    transition: all 0.2s; display: none;
+  }
+  .upload-analyze-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .upload-analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .upload-results {
+    display: none; margin-top: 1rem;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; padding: 1rem;
+  }
+  .upload-results-title {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); margin-bottom: 0.85rem;
+  }
+
+  /* class average row */
+  .class-avg-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 0.65rem 0.9rem; margin-bottom: 0.75rem; gap: 10px; flex-wrap: wrap;
+  }
+  .class-avg-lbl { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+  .class-avg-val { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.03em; white-space: nowrap; }
+  .class-avg-val small { font-size: 0.55em; color: rgba(255,255,255,0.35); }
+
+  /* per-face card (compact, dark) */
+  .face-cards-list { display: flex; flex-direction: column; gap: 7px; }
+  .face-card-dark {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 0.7rem 0.85rem;
+    display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px;
+  }
+  .face-card-dark.focused-border  { border-color: rgba(14,165,233,0.35); }
+  .face-card-dark.moderate-border { border-color: rgba(168,85,247,0.35); }
+  .face-card-dark.distracted-border { border-color: rgba(244,63,94,0.35); }
+
+  .face-num-badge {
+    width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .face-num-badge.focused { background: rgba(14,165,233,0.2); color: var(--blue-400); }
+  .face-num-badge.moderate { background: rgba(168,85,247,0.2); color: var(--purple-300); }
+  .face-num-badge.distracted { background: rgba(244,63,94,0.2); color: #fda4af; }
+
+  .face-signals { display: flex; gap: 5px; flex-wrap: wrap; }
+  .face-signal-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 100px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .face-signal-tag.good { background: rgba(14,165,233,0.12); color: var(--blue-400); border: 1px solid rgba(14,165,233,0.2); }
+  .face-signal-tag.bad  { background: rgba(244,63,94,0.12); color: #fda4af; border: 1px solid rgba(244,63,94,0.2); }
+  .face-signal-tag.warn { background: rgba(168,85,247,0.12); color: var(--purple-300); border: 1px solid rgba(168,85,247,0.2); }
+
+  .face-score-col { text-align: right; }
+  .face-score-num { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .face-score-sub { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 2px; text-align: right; }
+
+  /* live faces panel in sidebar */
+  .live-faces-panel { display: flex; flex-direction: column; gap: 7px; }
+  .live-face-row {
+    display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 9px; padding: 0.55rem 0.75rem;
+    transition: border-color 0.3s;
+  }
+  .live-face-row.focused-border  { border-color: rgba(14,165,233,0.3); }
+  .live-face-row.moderate-border { border-color: rgba(168,85,247,0.3); }
+  .live-face-row.distracted-border { border-color: rgba(244,63,94,0.3); }
+
+  .analyzing-spinner {
+    display: none; text-align: center; padding: 1rem 0;
+    color: rgba(255,255,255,0.45); font-size: 13px;
+  }
+  .analyzing-spinner .spin {
+    display: inline-block; width: 22px; height: 22px; border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: var(--purple-400); border-radius: 50%;
+    animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* per-face cards inside camera sidebar & upload results */
+  .face-cards-list { display: flex; flex-direction: column; gap: 8px; margin-top: 0.75rem; }
+  .face-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 11px; padding: 0.75rem 0.9rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .face-card-avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: white;
+  }
+  .face-card-body { flex: 1; min-width: 0; }
+  .face-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .face-card-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+  .face-card-score { font-size: 13px; font-weight: 800; letter-spacing: -0.02em; }
+  .face-card-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 100px; overflow: hidden; margin-bottom: 5px; }
+  .face-card-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--purple-500), var(--blue-500)); transition: width 0.5s ease; }
+  .face-card-signals { display: flex; gap: 4px; flex-wrap: wrap; }
+  .face-signal {
+    font-size: 10px; padding: 2px 7px; border-radius: 100px; font-weight: 500;
+  }
+  .face-signal.good { background: rgba(14,165,233,0.15); color: var(--blue-400); border: 1px solid rgba(14,165,233,0.25); }
+  .face-signal.bad  { background: rgba(244,63,94,0.15);  color: #fda4af;         border: 1px solid rgba(244,63,94,0.25); }
+  .face-signal.warn { background: rgba(192,154,240,0.15); color: var(--purple-300); border: 1px solid rgba(192,154,240,0.25); }
+
+  /* live faces panel inside sidebar */
+  .live-faces-card { margin-top: 0; }
+
+  /* class avg row */
+  .class-avg-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 0.9rem; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; margin-bottom: 8px;
+  }
+  .class-avg-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); }
+  .class-avg-val { font-size: 15px; font-weight: 800; color: white; letter-spacing: -0.02em; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--purple-200); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .team-grid { grid-template-columns: repeat(3, 1fr); }
+    .how-steps { grid-template-columns: repeat(2, 1fr); }
+    .camera-layout { grid-template-columns: 1fr; }
+    .results-summary { grid-template-columns: repeat(2, 1fr); }
+    .model-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav>
+  <a class="nav-logo" onclick="showPage('home')">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    <span>AttenMind</span>
+  </a>
+  <div class="nav-links">
+    <a onclick="showPage('home')" class="active" id="nav-home">Home</a>
+    <a onclick="showPage('camera')" id="nav-camera">Live Camera</a>
+    <a onclick="showPage('results')" id="nav-results">Results</a>
+    <a onclick="showPage('archive')" id="nav-archive">Archive</a>
+    <a onclick="showPage('about')" id="nav-about">About</a>
+  </div>
+  <div class="nav-badge">AI Powered</div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     PAGE: HOME
+═══════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-chip"><div class="hero-chip-dot"></div>Computer Vision · Real-Time Analysis</div>
+      <h1>Student Attention<br><span>Made Visible</span></h1>
+      <p class="hero-sub">AttenMind uses AI computer vision to analyze student engagement in real time — tracking eye state, yawning, and head pose to generate instant focus scores.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary" onclick="showPage('camera')">▶ Start Live Analysis</button>
+        <button class="btn-secondary" onclick="showPage('about')">Learn How It Works</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item"><div class="stat-val">3</div><div class="stat-lbl">AI Models</div></div>
+        <div class="stat-item"><div class="stat-val">0–100</div><div class="stat-lbl">Focus Score</div></div>
+        <div class="stat-item"><div class="stat-val">Real‑time</div><div class="stat-lbl">Analysis</div></div>
+        <div class="stat-item"><div class="stat-val">On‑device</div><div class="stat-lbl">Privacy</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <div style="background: white; padding: 1px 0;">
+    <div class="section">
+      <div class="section-label">What We Detect</div>
+      <h2>Three Signals, One Score</h2>
+      <p class="section-sub">AttenMind fuses three behavioral signals into a single engagement score that updates in real time.</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon purple">👁️</div>
+          <h3>Eye State Detection</h3>
+          <p>A Keras CNN analyzes both eyes, fused with Eye Aspect Ratio (EAR) geometry to determine if the student's eyes are open or closed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon blue">🥱</div>
+          <h3>Yawn Detection</h3>
+          <p>A deep learning model classifies mouth ROIs as yawning or normal, fused with Mouth Aspect Ratio (MAR) for high accuracy.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon purple">🙂</div>
+          <h3>Head Pose Estimation</h3>
+          <p>A custom ResNet-18 predicts yaw and pitch angles. Combined with facial geometry, it detects when students look away.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon blue">👥</div>
+          <h3>Multi-Student Support</h3>
+          <p>Detects all faces in a frame simultaneously. Each student is analyzed individually and scores are averaged into a class metric.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon purple">📊</div>
+          <h3>Instant Scoring</h3>
+          <p>Eye (40%), Yawn (30%), and Head (30%) contributions are weighted and fused into a final 0–100 engagement score.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon blue">🔒</div>
+          <h3>On-Device Privacy</h3>
+          <p>All processing happens locally. No video is transmitted. Students' data stays in the classroom.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="how-inner">
+      <div style="text-align: center; margin-bottom: 0;">
+        <div class="section-label" style="color: var(--blue-300);">Pipeline</div>
+        <h2 style="font-size: 2rem; font-weight: 700; color: white; letter-spacing: -0.02em;">How AttenMind Works</h2>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">1</div>
+          <h3>Frame Capture</h3>
+          <p>Webcam frame grabbed at ~1 fps via OpenCV for real-time analysis.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">2</div>
+          <h3>Face Detection</h3>
+          <p>dlib frontal face detector finds all students and ranks them left-to-right.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">3</div>
+          <h3>Landmark Extraction</h3>
+          <p>68-point facial landmarks pinpoint eye, mouth, and nose positions precisely.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">4</div>
+          <h3>Model Inference</h3>
+          <p>Eye, Yawn and Head Pose models run in parallel per face, fused with geometry.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM -->
+  <div class="team-section">
+    <div class="team-inner">
+      <div class="section-label">Our Team</div>
+      <h2 style="font-size: 2rem; font-weight: 700; color: var(--purple-900); margin-bottom: 0.5rem; letter-spacing: -0.02em;">Built at University of Hail</h2>
+      <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 2rem;">College of Computer Science and Engineering · Department of AI & Data Science</p>
+
+      <div class="team-grid">
+        <div class="supervisor-card">
+          <div class="supervisor-avatar">HA</div>
+          <h4>Dr. Haifa Mohammed Alyahya</h4>
+          <div class="role">Academic Supervisor</div>
+          <div class="affil">College of Computer Science and Engineering · University of Hail</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">SA</div>
+          <h4>Shoog Alqnoon</h4>
+          <span>ID: 202201726</span>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">RA</div>
+          <h4>Rahaf Alhies</h4>
+          <span>ID: 202100253</span>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">NA</div>
+          <h4>Norah Almuhaymil</h4>
+          <span>ID: 202200833</span>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">RA</div>
+          <h4>Rahaf Alanazi</h4>
+          <span>ID: 202200064</span>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">SA</div>
+          <h4>Shrouq Alreshidi</h4>
+          <span>ID: 202100006</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>AttenMind</strong> — AI Student Engagement Analyzer ·
+    University of Hail · College of Computer Science and Engineering
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE: CAMERA
+═══════════════════════════════════════════ -->
+<div class="page" id="page-camera">
+  <div class="camera-page">
+    <div class="camera-header">
+      <h1>Live Camera Analysis</h1>
+      <p>Real-time student attention monitoring powered by AttenMind's three-model pipeline</p>
+      <div id="apiBanner" style="display:inline-block;margin-top:0.75rem;padding:6px 16px;border-radius:100px;border:1px solid rgba(253,164,175,0.3);background:rgba(253,164,175,0.05);font-size:12px;color:rgba(255,255,255,0.55);">
+        ● Checking API connection…
+      </div>
+    </div>
+
+    <div class="camera-layout">
+      <!-- Feed -->
+      <div>
+        <div class="camera-feed" id="cameraFeed">
+          <div class="hero-grid" style="opacity:0.04;border-radius:20px;"></div>
+          <video id="videoEl" class="camera-canvas" autoplay muted playsinline></video>
+          <canvas id="canvasEl" class="camera-canvas" style="position:absolute;"></canvas>
+          <div class="camera-overlay"></div>
+          <div class="scan-line" id="scanLine"></div>
+          <div class="camera-offline" id="cameraOffline">
+            <div class="cam-icon">📷</div>
+            <p>Camera not active</p>
+            <small>Press Start to begin analysis</small>
+          </div>
+          <div class="camera-status-bar">
+            <div class="live-badge" id="liveBadge"><div class="live-badge-dot"></div>LIVE</div>
+            <div class="fps-badge" id="fpsBadge">0 fps · 0 faces</div>
+          </div>
+        </div>
+
+        <!-- Session note -->
+        <div style="margin-top:1rem; background:rgba(124,63,204,0.08); border:1px solid rgba(124,63,204,0.2); border-radius:12px; padding:0.9rem 1.1rem; font-size:13px; color:var(--purple-700); line-height:1.55;">
+          <strong>ℹ️ Important:</strong> This interface connects to the AttenMind model pipeline (eye classifier, yawn detector, head pose estimator). In the deployed Streamlit app, the Python backend handles inference. This website demonstrates the UI layer and simulates scoring for presentation purposes. The actual model files (<code>new_eye_classifier_model.keras</code>, <code>best_model_final.h5</code>, <code>headpose_attenmind.pt</code>) run in the Streamlit environment.
+        </div>
+
+        <!-- ── IMAGE UPLOAD PANEL ── -->
+        <div class="upload-panel" style="margin-top:1rem;">
+          <div class="upload-panel-header" id="uploadToggle" onclick="toggleUploadPanel()">
+            <h3>
+              <span style="font-size:16px;">🖼️</span>
+              Analyze a Face Image
+            </h3>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="upload-panel-body" id="uploadBody">
+
+            <!-- Drop zone -->
+            <div class="drop-zone" id="dropZone">
+              <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg,image/webp"
+                     onchange="handleImageSelect(event)">
+              <div class="drop-zone-icon">📂</div>
+              <p>Drop an image here or click to browse</p>
+              <small>Supports JPG, PNG, WEBP · best with a clear frontal face</small>
+            </div>
+
+            <!-- Preview -->
+            <div class="upload-preview" id="uploadPreview">
+              <img id="previewImg" src="" alt="Preview">
+              <div class="upload-preview-overlay">
+                <div class="upload-preview-info">
+                  <span id="previewFilename">—</span>
+                </div>
+                <button onclick="clearUpload()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:4px 10px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;">✕ Clear</button>
+              </div>
+            </div>
+
+            <!-- Analyze button -->
+            <button class="upload-analyze-btn" id="analyzeBtn" onclick="analyzeUploadedImage()">
+              🔍 Analyze with AttenMind
+            </button>
+
+            <!-- Spinner -->
+            <div class="analyzing-spinner" id="analyzeSpinner">
+              <span class="spin"></span> Running AttenMind pipeline…
+            </div>
+
+            <!-- Results -->
+            <div class="upload-results" id="uploadResults">
+              <div class="upload-results-title">Analysis Result</div>
+              <!-- class average -->
+              <div class="class-avg-row" id="uploadAvgRow">
+                <span class="class-avg-lbl">Class Average</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div class="upload-bar" style="width:100px;">
+                    <div class="upload-bar-fill" id="uploadBarFill" style="width:0%"></div>
+                  </div>
+                  <span class="class-avg-val" id="uploadScoreVal">—</span>
+                  <div id="uploadStatusTag" class="status-tag moderate" style="font-size:11px;">—</div>
+                </div>
+              </div>
+              <!-- per-face cards -->
+              <div class="face-cards-list" id="uploadFaceCards"></div>
+              <button onclick="saveUploadToArchive()" style="width:100%;margin-top:0.9rem;padding:9px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Outfit',sans-serif;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">💾 Save to Archive</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="camera-sidebar">
+        <!-- Score -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Engagement Score</div>
+          <div class="score-display">
+            <div class="score-ring">
+              <svg viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                <circle cx="55" cy="55" r="48" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                        stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" id="scoreDash"/>
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#7c3fcc"/>
+                    <stop offset="100%" stop-color="#38bdf8"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="score-ring-val" id="scoreVal">—<small></small></div>
+            </div>
+            <div id="statusTag" class="status-tag moderate" style="opacity:0.4">Waiting…</div>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Per-Face Signals</div>
+          <div class="live-faces-panel" id="liveFacesPanel">
+            <div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center;padding:0.5rem 0;">No faces detected yet</div>
+          </div>
+          <div style="margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;align-items:center;justify-content:space-between;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.3);">Faces detected</div>
+            <div style="font-size:13px;font-weight:700;color:white;" id="faceCount">0</div>
+          </div>
+        </div>
+
+        <!-- Live Per-Face Breakdown -->
+        <div class="sidebar-card live-faces-card" id="liveFacesCard">
+          <div class="sidebar-card-title">Per-Student Breakdown</div>
+          <div id="liveFacesList">
+            <div style="font-size:12px; color:rgba(255,255,255,0.25); text-align:center; padding:0.5rem 0;">Start a session to see per-face results</div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Controls</div>
+          <div class="control-btns">
+            <button class="ctrl-btn start" id="startBtn" onclick="startCamera()">▶ Start</button>
+            <button class="ctrl-btn stop" id="stopBtn" onclick="stopCamera()" disabled>⏹ Stop</button>
+            <button class="ctrl-btn save" onclick="saveSession()">💾 Save to Archive</button>
+          </div>
+        </div>
+
+        <!-- Log -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Session Log</div>
+          <div class="log-list" id="logList">
+            <div class="log-item">
+              <span class="log-time">—</span>
+              <span class="log-msg">No active session</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE: RESULTS
+═══════════════════════════════════════════ -->
+<div class="page" id="page-results">
+  <div class="results-page">
+    <div class="results-inner">
+      <div class="results-header">
+        <h1>Session Results</h1>
+        <p>Latest analysis · <span id="resultTimestamp">No session yet — run a live analysis first</span></p>
+      </div>
+
+      <div class="results-summary">
+        <div class="summary-card">
+          <div class="summary-label">Class Average</div>
+          <div class="summary-value" id="res-avg">—</div>
+          <div class="summary-sub">Engagement score / 100</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Students</div>
+          <div class="summary-value focused" id="res-students">—</div>
+          <div class="summary-sub">Detected in frame</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Status</div>
+          <div class="summary-value" id="res-status" style="font-size:1.2rem;">—</div>
+          <div class="summary-sub">Class engagement level</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Duration</div>
+          <div class="summary-value" id="res-duration">—</div>
+          <div class="summary-sub">Session length</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-area">
+        <div class="chart-title">Engagement Over Session (Simulated Timeline)</div>
+        <div class="chart-bars" id="chartBars">
+          <!-- bars injected by JS -->
+          <div style="width:100%; display:flex; align-items:center; justify-content:center; color:var(--gray-400); font-size:13px;">Run a session to see results</div>
+        </div>
+      </div>
+
+      <!-- Student cards -->
+      <div class="chart-title" style="margin-bottom:1rem;">Per-Student Breakdown</div>
+      <div class="students-grid" id="studentsGrid">
+        <div style="grid-column:1/-1; background:white; border:1px solid var(--purple-100); border-radius:14px; padding:2rem; text-align:center; color:var(--gray-400); font-size:14px;">
+          No results yet. Start a camera session to see per-student analysis.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE: ARCHIVE
+═══════════════════════════════════════════ -->
+<div class="page" id="page-archive">
+  <div class="archive-page">
+    <div class="archive-inner">
+      <div class="archive-header">
+        <div>
+          <h1>Session Archive</h1>
+          <p style="color:var(--gray-600); font-size:14px; margin-top:3px;">All saved classroom analysis sessions</p>
+        </div>
+        <button class="btn-primary" style="font-size:13px; padding:9px 20px;" onclick="showPage('camera')">+ New Session</button>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterArchive(this,'all')">All Sessions</button>
+        <button class="filter-btn" onclick="filterArchive(this,'focused')">Focused ≥80</button>
+        <button class="filter-btn" onclick="filterArchive(this,'moderate')">Moderate 50–79</button>
+        <button class="filter-btn" onclick="filterArchive(this,'distracted')">Distracted &lt;50</button>
+      </div>
+
+      <div class="archive-table">
+        <div class="table-head">
+          <span>Session</span>
+          <span>Date</span>
+          <span>Duration</span>
+          <span>Students</span>
+          <span>Avg Score</span>
+          <span></span>
+        </div>
+        <div id="archiveBody">
+          <!-- rows injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE: ABOUT
+═══════════════════════════════════════════ -->
+<div class="page" id="page-about">
+  <div class="about-page">
+    <div class="about-hero">
+      <h1>About AttenMind</h1>
+      <p>An AI-based student engagement monitoring system built with computer vision to support teachers in real-time classroom management.</p>
+    </div>
+
+    <div class="about-content">
+      <div class="about-section">
+        <h2>Project Overview</h2>
+        <p>AttenMind is a final-year capstone project developed at the University of Hail, College of Computer Science and Engineering. The system addresses the challenge of monitoring student engagement in real-time — a task that is inherently difficult in modern classrooms where individual observation is impractical at scale.</p>
+        <p>The system processes live video frames and extracts three key behavioral indicators: eye state, yawning, and head orientation. These signals are combined through a weighted fusion formula to produce a discipline score from 0 to 100 for each student, as well as a class-wide average.</p>
+      </div>
+
+      <div class="about-section">
+        <h2>The Three AI Models</h2>
+        <div class="model-grid">
+          <div class="model-card">
+            <div class="model-badge">Eye Model</div>
+            <h4>Eye State Classifier</h4>
+            <p>Keras CNN trained on the MRL Eye Dataset. Classifies each eye as open or closed. Fused with EAR (Eye Aspect Ratio) geometric signal at 60% geometric / 40% model weight.</p>
+          </div>
+          <div class="model-card">
+            <div class="model-badge">Yawn Model</div>
+            <h4>Yawn Detector</h4>
+            <p>Deep learning classifier (best_model_final.h5) for mouth ROI. Determines yawn vs. no_yawn. Combined with MAR (Mouth Aspect Ratio) at 55%/45% fusion.</p>
+          </div>
+          <div class="model-card">
+            <div class="model-badge">Head Pose</div>
+            <h4>Head Pose Estimator</h4>
+            <p>Custom ResNet-18 backbone (headpose_attenmind.pt) predicting yaw and pitch bins. Combined with nose-eye geometric offset for forward-vs-distracted classification.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>Scoring Formula</h2>
+        <p>The final engagement score is a weighted combination of three confidence signals:</p>
+        <div class="formula-box">
+          <span class="c-purple">Score</span> = round(<span class="c-blue">40</span> × eye_conf + <span class="c-blue">30</span> × yawn_conf + <span class="c-blue">30</span> × head_conf)<br><br>
+          <span class="c-green">eye_conf</span>  = 0.6 × EAR_ramp + 0.4 × model_eye_open_prob<br>
+          <span class="c-green">yawn_conf</span> = 0.55 × MAR_no_yawn + 0.45 × (1 – yawn_prob)<br>
+          <span class="c-green">head_conf</span> = 0.7 × pose_conf + 0.3 × geom_head_conf<br><br>
+          Focused ≥ 80 · Moderate ≥ 50 · Distracted &lt; 50
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>Technology Stack</h2>
+        <div class="tech-tags">
+          <span class="tech-tag">Python</span>
+          <span class="tech-tag">TensorFlow / Keras</span>
+          <span class="tech-tag">PyTorch</span>
+          <span class="tech-tag">OpenCV</span>
+          <span class="tech-tag">dlib</span>
+          <span class="tech-tag">ResNet-18</span>
+          <span class="tech-tag blue">Streamlit</span>
+          <span class="tech-tag blue">NumPy</span>
+          <span class="tech-tag blue">68-point Facial Landmarks</span>
+          <span class="tech-tag blue">EAR / MAR Geometry</span>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>Privacy & Ethics</h2>
+        <p>AttenMind is designed with privacy preservation as a core principle. All inference runs on-device — no video, images, or facial data are transmitted to any external server. The system focuses solely on behavioral engagement signals and does not perform facial recognition or store biometric identifiers.</p>
+      </div>
+
+      <div class="about-section">
+        <h2>University</h2>
+        <p><strong>University of Hail</strong><br>College of Computer Science and Engineering<br>Department of Artificial Intelligence and Data Science</p>
+        <p style="margin-top:0.5rem;"><strong>Academic Supervisor:</strong> Dr. Haifa Mohammed Alyahya</p>
+      </div>
+    </div>
+
+    <footer>
+      <strong>AttenMind</strong> — AI Student Engagement Analyzer ·
+      University of Hail · College of Computer Science and Engineering
+    </footer>
+  </div>
+</div>
+
+<script>
+// ── PAGE ROUTER ──────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── API CONNECTION ────────────────────────────────────
+const API_URL = 'http://localhost:5050';
+let apiOnline = false;
+
+async function checkApiHealth() {
+  try {
+    const res = await fetch(API_URL + '/health', { signal: AbortSignal.timeout(2000) });
+    const data = await res.json();
+    apiOnline = data.ok;
+  } catch {
+    apiOnline = false;
+  }
+  updateApiStatus();
+  setTimeout(checkApiHealth, 5000); // recheck every 5s
+}
+
+function updateApiStatus() {
+  const banner = document.getElementById('apiBanner');
+  if (!banner) return;
+  if (apiOnline) {
+    banner.innerHTML = `<span style="color:#4ade80">● API Connected</span> — results are from your real AttenMind models`;
+    banner.style.borderColor = 'rgba(74,222,128,0.3)';
+    banner.style.background  = 'rgba(74,222,128,0.06)';
+  } else {
+    banner.innerHTML = `<span style="color:#fda4af">● API Offline</span> — run <code>python attenmind_api.py</code> to connect your models. Using simulation until then.`;
+    banner.style.borderColor = 'rgba(253,164,175,0.3)';
+    banner.style.background  = 'rgba(253,164,175,0.05)';
+  }
+}
+
+// ── SHARED: one face object (simulation fallback) ─────
+function simulateFace(baseScore) {
+  const score = Math.round(Math.max(10, Math.min(100, baseScore + (Math.random()-0.5)*22)));
+  const eyeOpen = score > 55 || Math.random() > 0.3;
+  const yawning = (score < 58 && Math.random() > 0.5);
+  const headFwd = score > 50 || Math.random() > 0.35;
+  const eyeConf  = Math.round((eyeOpen  ? 0.55+Math.random()*0.4  : 0.1+Math.random()*0.3 ) * 100);
+  const yawnConf = Math.round((!yawning ? 0.6 +Math.random()*0.35 : 0.1+Math.random()*0.3 ) * 100);
+  const headConf = Math.round((headFwd  ? 0.6 +Math.random()*0.38 : 0.2+Math.random()*0.3 ) * 100);
+  const status = score >= 80 ? 'focused' : score >= 50 ? 'moderate' : 'distracted';
+  return { score, eyeOpen, yawning, headFwd, eyeConf, yawnConf, headConf, status };
+}
+
+// convert API face object → internal format
+function apiFaceToInternal(f) {
+  return {
+    score:    f.score,
+    eyeOpen:  f.eye === 'open',
+    yawning:  f.yawn === 'yawn',
+    headFwd:  f.head === 'forward',
+    eyeConf:  Math.round(f.eye_conf  * 100),
+    yawnConf: Math.round(f.yawn_conf * 100),
+    headConf: Math.round(f.head_conf * 100),
+    status:   f.css,
+  };
+}
+
+function faceScoreColor(score) {
+  return score >= 80 ? '#38bdf8' : score >= 50 ? '#c09af0' : '#fda4af';
+}
+
+// start health check
+checkApiHealth();
+
+// ── ARCHIVE DATA ─────────────────────────────────────
+let archiveData = [
+  { id: 1, name: 'Morning Session',   date: '2025-05-28', duration: '12m 34s', students: 24, score: 82, status: 'focused' },
+  { id: 2, name: 'Afternoon Lecture', date: '2025-05-27', duration: '8m 12s',  students: 20, score: 61, status: 'moderate' },
+  { id: 3, name: 'Lab Session',       date: '2025-05-26', duration: '18m 05s', students: 16, score: 74, status: 'moderate' },
+  { id: 4, name: 'Guest Lecture',     date: '2025-05-24', duration: '6m 48s',  students: 30, score: 88, status: 'focused' },
+  { id: 5, name: 'Tutorial Session',  date: '2025-05-22', duration: '9m 20s',  students: 12, score: 43, status: 'distracted' },
+];
+let currentFilter = 'all';
+
+function renderArchive() {
+  const body = document.getElementById('archiveBody');
+  const filtered = currentFilter === 'all' ? archiveData : archiveData.filter(r => r.status === currentFilter);
+  if (!filtered.length) {
+    body.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--gray-400);font-size:14px;">No sessions match this filter.</div>`;
+    return;
+  }
+  body.innerHTML = filtered.map(r => {
+    const cls = r.score >= 80 ? 'high' : r.score >= 50 ? 'mid' : 'low';
+    return `<div class="table-row">
+      <span style="font-weight:600;color:var(--purple-800);">${r.name}</span>
+      <span class="date">${r.date}</span>
+      <span>${r.duration}</span>
+      <span>${r.students} students</span>
+      <span><span class="score-pill ${cls}">${r.score}/100</span></span>
+      <button class="view-btn" onclick="viewSession(${r.id})">View →</button>
+    </div>`;
+  }).join('');
+}
+
+function filterArchive(btn, type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = type;
+  renderArchive();
+}
+
+function viewSession(id) {
+  const s = archiveData.find(r => r.id === id);
+  if (!s) return;
+  simulateResults(s.score, s.students, s.name, s.duration);
+  showPage('results');
+}
+
+// ── RESULTS PAGE ─────────────────────────────────────
+function simulateResults(avgScore, numStudents, sessionName, duration) {
+  document.getElementById('resultTimestamp').textContent = sessionName + ' · ' + new Date().toLocaleString();
+  document.getElementById('res-avg').textContent = avgScore;
+  document.getElementById('res-students').textContent = numStudents;
+  document.getElementById('res-duration').textContent = duration || '—';
+  const statusEl = document.getElementById('res-status');
+  if (avgScore >= 80)      { statusEl.textContent = 'Focused';    statusEl.style.color = 'var(--blue-600)'; }
+  else if (avgScore >= 50) { statusEl.textContent = 'Moderate';   statusEl.style.color = 'var(--purple-600)'; }
+  else                     { statusEl.textContent = 'Distracted'; statusEl.style.color = '#e11d48'; }
+
+  // Chart
+  const barContainer = document.getElementById('chartBars');
+  const points = Array.from({length: 12}, () => Math.max(10, Math.min(100, avgScore + (Math.random()-0.5)*22)));
+  barContainer.innerHTML = points.map((v, i) => {
+    const cls = v >= 80 ? 'blue' : v >= 50 ? '' : 'red';
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar ${cls}" style="height:${Math.round(v)}%"></div>
+      <div class="chart-x-lbl">${(i+1)*5}s</div>
+    </div>`;
+  }).join('');
+
+  // Student cards
+  const n = Math.min(numStudents, 8);
+  const grid = document.getElementById('studentsGrid');
+  grid.innerHTML = Array.from({length: n}, (_, i) => {
+    const f = simulateFace(avgScore);
+    const col = faceScoreColor(f.score);
+    const circ = 2 * Math.PI * 24;
+    const dash = circ * (1 - f.score/100);
+    return `<div class="student-result-card">
+      <div class="student-score-ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="24" fill="none" stroke="var(--purple-100)" stroke-width="5"/>
+          <circle cx="32" cy="32" r="24" fill="none" stroke="${col}" stroke-width="5"
+                  stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash.toFixed(1)}"
+                  transform="rotate(-90 32 32)"/>
+          <text x="32" y="37" text-anchor="middle" font-size="13" font-weight="700" fill="${col}">${f.score}</text>
+        </svg>
+      </div>
+      <div class="student-info">
+        <h4>Student ${i+1}</h4>
+        <div class="student-metrics">
+          <span class="micro-badge ${f.eyeOpen?'good':'bad'}">${f.eyeOpen?'Eyes Open':'Eyes Closed'}</span>
+          <span class="micro-badge ${f.yawning?'bad':'good'}">${f.yawning?'Yawning':'Normal'}</span>
+          <span class="micro-badge ${f.headFwd?'good':'warn'}">${f.headFwd?'Forward':'Distracted'}</span>
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:var(--gray-400);">${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CAMERA ───────────────────────────────────────────
+let cameraStream = null;
+let analysisInterval = null;
+let sessionStart = null;
+let lastSessionFaces = [];
+
+function startCamera() {
+  const video   = document.getElementById('videoEl');
+  const offline = document.getElementById('cameraOffline');
+  const liveBadge = document.getElementById('liveBadge');
+  const feed    = document.getElementById('cameraFeed');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn  = document.getElementById('stopBtn');
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      cameraStream = stream;
+      video.srcObject = stream;
+      video.style.display = 'block';
+      offline.style.display = 'none';
+      liveBadge.classList.add('on');
+      feed.classList.add('scanning');
+      startBtn.disabled = true; stopBtn.disabled = false;
+      sessionStart = Date.now();
+      document.getElementById('logList').innerHTML = '';
+      addLog('Camera started', null);
+      startAnalysisLoop();
+    }).catch(() => simulateCameraMode());
+  } else {
+    simulateCameraMode();
+  }
+}
+
+function simulateCameraMode() {
+  const offline = document.getElementById('cameraOffline');
+  offline.innerHTML = `<div class="cam-icon">🤖</div><p>Simulation Mode Active</p><small>Camera access denied — running AttenMind inference simulation</small>`;
+  document.getElementById('liveBadge').classList.add('on');
+  document.getElementById('cameraFeed').classList.add('scanning');
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  sessionStart = Date.now();
+  document.getElementById('logList').innerHTML = '';
+  addLog('Simulation mode started', null);
+  startAnalysisLoop();
+}
+
+function startAnalysisLoop() {
+  analysisInterval = setInterval(() => runAnalysisTick(), 1800);
+}
+
+async function runAnalysisTick() {
+  const baseScore = 65 + Math.sin(Date.now() / 8000) * 20;
+
+  if (apiOnline && cameraStream) {
+    // ── Grab frame from live video → send to real API ───────────────
+    try {
+      const video  = document.getElementById('videoEl');
+      const canvas = document.createElement('canvas');
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const b64 = canvas.toDataURL('image/jpeg', 0.7);
+
+      const response = await fetch(API_URL + '/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({image: b64}),
+        signal: AbortSignal.timeout(8000)
+      });
+      const data = await response.json();
+
+      if (data.ok && data.faces_detected > 0) {
+        const faces    = data.faces.map(apiFaceToInternal);
+        const avgScore = data.class_average.score;
+
+        // draw annotated frame overlay on canvas
+        if (data.annotated_image) {
+          const canvasEl = document.getElementById('canvasEl');
+          canvasEl.width  = canvas.width;
+          canvasEl.height = canvas.height;
+          canvasEl.style.display = 'block';
+          canvasEl.style.position = 'absolute';
+          const ctx = canvasEl.getContext('2d');
+          const img = new Image();
+          img.onload = () => ctx.drawImage(img, 0, 0, canvasEl.width, canvasEl.height);
+          img.src = 'data:image/png;base64,' + data.annotated_image;
+        }
+
+        updateScoreDisplay(avgScore);
+        renderLiveFaces(faces);
+        document.getElementById('faceCount').textContent = faces.length;
+        document.getElementById('fpsBadge').textContent = '1 fps · ' + faces.length + ' face' + (faces.length>1?'s':'') + ' · Real Model';
+        addLog(`${faces.length} face${faces.length>1?'s':''} · avg`, avgScore);
+        return;
+      } else if (data.ok && data.faces_detected === 0) {
+        document.getElementById('fpsBadge').textContent = '1 fps · No face detected';
+        addLog('No face in frame', null);
+        return;
+      }
+    } catch (err) {
+      console.warn('Live API call failed:', err);
+      apiOnline = false; updateApiStatus();
+    }
+  }
+
+  // ── Simulation fallback ─────────────────────────────────────────
+  const numFaces = Math.floor(Math.random() * 3) + 1;
+  const faces    = Array.from({length: numFaces}, () => simulateFace(baseScore));
+  lastSessionFaces = faces;
+  const avgScore = Math.round(faces.reduce((s, f) => s + f.score, 0) / faces.length);
+  updateScoreDisplay(avgScore);
+  renderLiveFaces(faces);
+  document.getElementById('faceCount').textContent = numFaces;
+  document.getElementById('fpsBadge').textContent = '1 fps · ' + numFaces + ' face' + (numFaces > 1 ? 's' : '') + ' · Simulation';
+  addLog(`${numFaces} face${numFaces>1?'s':''} · avg`, avgScore);
+}
+
+function renderLiveFaces(faces) {
+  const panel = document.getElementById('liveFacesPanel');
+  panel.innerHTML = faces.map((f, i) => {
+    const col = faceScoreColor(f.score);
+    const borderCls = f.status + '-border';
+    const eyeTag  = `<span class="face-signal-tag ${f.eyeOpen?'good':'bad'}">${f.eyeOpen?'Eyes Open':'Closed'}</span>`;
+    const mthTag  = `<span class="face-signal-tag ${f.yawning?'bad':'good'}">${f.yawning?'Yawning':'Normal'}</span>`;
+    const hdTag   = `<span class="face-signal-tag ${f.headFwd?'good':'warn'}">${f.headFwd?'Forward':'Away'}</span>`;
+    return `<div class="live-face-row ${borderCls}">
+      <div class="face-num-badge ${f.status}">S${i+1}</div>
+      <div class="face-signals">${eyeTag}${mthTag}${hdTag}</div>
+      <div class="face-score-col">
+        <div class="face-score-num" style="color:${col}">${f.score}</div>
+        <div class="face-score-sub">/100</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateScoreDisplay(score) {
+  const circumference = 2 * Math.PI * 48;
+  const dash = circumference * (1 - score / 100);
+  document.getElementById('scoreDash').setAttribute('stroke-dashoffset', dash.toFixed(1));
+  document.getElementById('scoreVal').innerHTML = score + '<small>/100</small>';
+  const tag = document.getElementById('statusTag');
+  tag.style.opacity = '1';
+  if (score >= 80)      { tag.textContent = '● Focused';    tag.className = 'status-tag focused'; }
+  else if (score >= 50) { tag.textContent = '● Moderate';   tag.className = 'status-tag moderate'; }
+  else                  { tag.textContent = '● Distracted'; tag.className = 'status-tag distracted'; }
+}
+
+function addLog(msg, score) {
+  const list = document.getElementById('logList');
+  const now  = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  const scoreHtml = score !== null ? `<span class="log-score" style="color:${score>=80?'var(--blue-400)':score>=50?'var(--purple-300)':'#fda4af'}">${score}</span>` : '';
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${msg}</span>${scoreHtml}`;
+  list.insertBefore(item, list.firstChild);
+  if (list.children.length > 8) list.removeChild(list.lastChild);
+}
+
+function stopCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  if (analysisInterval) { clearInterval(analysisInterval); analysisInterval = null; }
+
+  const video = document.getElementById('videoEl');
+  const offline = document.getElementById('cameraOffline');
+  video.style.display = 'none'; video.srcObject = null;
+  offline.style.display = 'flex';
+  offline.innerHTML = `<div class="cam-icon">📷</div><p>Session ended</p><small>Press Start to begin a new session</small>`;
+  document.getElementById('liveBadge').classList.remove('on');
+  document.getElementById('cameraFeed').classList.remove('scanning');
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  addLog('Session stopped', null);
+  document.getElementById('fpsBadge').textContent = '0 fps · 0 faces';
+  document.getElementById('faceCount').textContent = '0';
+  document.getElementById('liveFacesPanel').innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center;padding:0.5rem 0;">Session ended</div>`;
+}
+
+function saveSession() {
+  const scoreEl = document.getElementById('scoreVal');
+  const scoreText = scoreEl ? parseInt(scoreEl.textContent) : null;
+  if (!scoreText || isNaN(scoreText)) { alert('No active session to save.'); return; }
+
+  const duration = sessionStart ? Math.round((Date.now() - sessionStart) / 1000) : 30;
+  const mins = Math.floor(duration / 60); const secs = duration % 60;
+  const durationStr = (mins > 0 ? mins + 'm ' : '') + secs + 's';
+  const today = new Date().toISOString().split('T')[0];
+  const faces = parseInt(document.getElementById('faceCount').textContent) || 1;
+
+  archiveData.unshift({
+    id: archiveData.length + 1, name: 'Session ' + today, date: today,
+    duration: durationStr, students: faces, score: scoreText,
+    status: scoreText >= 80 ? 'focused' : scoreText >= 50 ? 'moderate' : 'distracted'
+  });
+  simulateResults(scoreText, faces, 'Session ' + today, durationStr);
+  renderArchive();
+  showPage('results');
+}
+
+// ── IMAGE UPLOAD ──────────────────────────────────────
+function toggleUploadPanel() {
+  document.getElementById('uploadToggle').classList.toggle('open');
+  document.getElementById('uploadBody').classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('dropZone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadImageFile(file);
+  });
+});
+
+function handleImageSelect(event) {
+  const file = event.target.files[0];
+  if (file) loadImageFile(file);
+}
+
+function loadImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewFilename').textContent = file.name + ' · ' + (file.size / 1024).toFixed(0) + ' KB';
+    document.getElementById('uploadPreview').style.display = 'block';
+    document.getElementById('analyzeBtn').style.display = 'block';
+    document.getElementById('uploadResults').style.display = 'none';
+    document.getElementById('dropZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearUpload() {
+  document.getElementById('previewImg').src = '';
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('analyzeBtn').style.display = 'none';
+  document.getElementById('uploadResults').style.display = 'none';
+  document.getElementById('analyzeSpinner').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('imageInput').value = '';
+}
+
+async function analyzeUploadedImage() {
+  const btn     = document.getElementById('analyzeBtn');
+  const spinner = document.getElementById('analyzeSpinner');
+  const results = document.getElementById('uploadResults');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  results.style.display = 'none';
+
+  let faces = [], avgScore, avgStatus, avgCss, annotatedImg = null;
+
+  if (apiOnline) {
+    // ── Real model inference via API ────────────────────────────────
+    try {
+      const imgSrc = document.getElementById('previewImg').src;
+      const response = await fetch(API_URL + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imgSrc }),
+        signal: AbortSignal.timeout(30000)
+      });
+      const data = await response.json();
+
+      if (!data.ok) throw new Error(data.error || 'API error');
+
+      if (data.faces_detected === 0) {
+        spinner.style.display = 'none';
+        btn.disabled = false;
+        document.getElementById('uploadFaceCards').innerHTML =
+          `<div style="text-align:center;padding:1rem;color:rgba(255,255,255,0.4);font-size:13px;">
+            ⚠️ No face detected in the image. Try a clearer frontal photo.
+          </div>`;
+        results.style.display = 'block';
+        return;
+      }
+
+      faces       = data.faces.map(apiFaceToInternal);
+      avgScore    = data.class_average.score;
+      avgStatus   = data.class_average.css;
+      avgCss      = data.class_average.css;
+      annotatedImg = data.annotated_image ? 'data:image/png;base64,' + data.annotated_image : null;
+
+      // show annotated image
+      if (annotatedImg) {
+        document.getElementById('previewImg').src = annotatedImg;
+      }
+
+    } catch (err) {
+      console.warn('API call failed, falling back to simulation:', err);
+      apiOnline = false;
+      updateApiStatus();
+      // fall through to simulation
+      const baseScore = 48 + Math.random()*40;
+      const n = Math.floor(Math.random()*4)+1;
+      faces = Array.from({length:n}, () => simulateFace(baseScore));
+      avgScore = Math.round(faces.reduce((s,f)=>s+f.score,0)/faces.length);
+      avgStatus = avgScore>=80?'focused':avgScore>=50?'moderate':'distracted';
+    }
+  } else {
+    // ── Simulation fallback ─────────────────────────────────────────
+    await new Promise(r => setTimeout(r, 1200 + Math.random()*900));
+    const baseScore = 48 + Math.random()*40;
+    const n = Math.floor(Math.random()*4)+1;
+    faces = Array.from({length:n}, () => simulateFace(baseScore));
+    avgScore = Math.round(faces.reduce((s,f)=>s+f.score,0)/faces.length);
+    avgStatus = avgScore>=80?'focused':avgScore>=50?'moderate':'distracted';
+  }
+
+  spinner.style.display = 'none';
+  btn.disabled = false;
+
+  // Update sidebar
+  updateScoreDisplay(avgScore);
+  renderLiveFaces(faces);
+  document.getElementById('faceCount').textContent = faces.length;
+  document.getElementById('fpsBadge').textContent = faces.length + ' face' + (faces.length>1?'s':'') + ' detected';
+
+  // Class average row
+  const avgCol = faceScoreColor(avgScore);
+  document.getElementById('uploadScoreVal').innerHTML = `<span style="color:${avgCol};font-size:1.4rem;font-weight:800;">${avgScore}</span><small>/100</small>`;
+  const tag = document.getElementById('uploadStatusTag');
+  if (avgScore>=80)      { tag.textContent='● Focused';    tag.className='status-tag focused'; }
+  else if (avgScore>=50) { tag.textContent='● Moderate';   tag.className='status-tag moderate'; }
+  else                   { tag.textContent='● Distracted'; tag.className='status-tag distracted'; }
+  document.getElementById('uploadBarFill').style.width = avgScore + '%';
+  document.getElementById('uploadAvgRow').querySelector('.class-avg-lbl').textContent =
+    `Class Average · ${faces.length} face${faces.length>1?'s':''} detected` + (apiOnline ? ' · Real Model' : ' · Simulation');
+
+  // Per-face cards
+  document.getElementById('uploadFaceCards').innerHTML = faces.map((f, i) => {
+    const col = faceScoreColor(f.score);
+    const borderCls = f.status + '-border';
+    const eyeTag  = `<span class="face-signal-tag ${f.eyeOpen?'good':'bad'}">${f.eyeOpen?'Eyes Open':'Closed'} · ${f.eyeConf}%</span>`;
+    const mthTag  = `<span class="face-signal-tag ${f.yawning?'bad':'good'}">${f.yawning?'Yawning':'Normal'} · ${f.yawnConf}%</span>`;
+    const hdTag   = `<span class="face-signal-tag ${f.headFwd?'good':'warn'}">${f.headFwd?'Forward':'Away'} · ${f.headConf}%</span>`;
+    return `<div class="face-card-dark ${borderCls}">
+      <div class="face-num-badge ${f.status}">S${i+1}</div>
+      <div class="face-signals">${eyeTag}${mthTag}${hdTag}</div>
+      <div class="face-score-col">
+        <div class="face-score-num" style="color:${col}">${f.score}</div>
+        <div class="face-score-sub">/100 · ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  results.style.display = 'block';
+  addLog(`Image: ${faces.length} face${faces.length>1?'s':''} · avg`, avgScore);
+  simulateResults(avgScore, faces.length, 'Image Upload', '—');
+}
+
+function saveUploadToArchive() {
+  const scoreRaw = document.getElementById('uploadScoreVal').textContent;
+  const scoreText = parseInt(scoreRaw);
+  if (isNaN(scoreText)) return;
+  const today = new Date().toISOString().split('T')[0];
+  const fname = document.getElementById('previewFilename').textContent.split('·')[0].trim() || 'Image Upload';
+  const faces = parseInt(document.getElementById('faceCount').textContent) || 1;
+  archiveData.unshift({
+    id: archiveData.length + 1, name: fname, date: today, duration: '—',
+    students: faces, score: scoreText,
+    status: scoreText >= 80 ? 'focused' : scoreText >= 50 ? 'moderate' : 'distracted'
+  });
+  renderArchive();
+  showPage('results');
+}
+
+// ── INIT ─────────────────────────────────────────────
+renderArchive();
+</script>
+</body>
+</html>
